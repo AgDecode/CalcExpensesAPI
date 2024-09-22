@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://213.171.26.188:5432/calcexpenses
+    username: you
+    password: need remember
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+
