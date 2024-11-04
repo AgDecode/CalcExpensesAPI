@@ -2,26 +2,52 @@ package org.CalcExpenses.Controllers;
 
 import org.CalcExpenses.DTO.Expense;
 import org.CalcExpenses.Repository.ExpenseRepository;
-import org.CalcExpenses.Service.MetricsService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @RestController
+@RequestMapping("/api/expenses")
 public class ExpenseController {
 
     @Autowired
     private ExpenseRepository expenseRepository;
 
-    @Autowired
-    private MetricsService metricsService;  // Инъекция сервиса для метрик
-
-    @PostMapping("/api/expenses")
+    @PostMapping
     public Expense createExpense(@RequestBody Expense expense) {
-        Expense savedExpense = expenseRepository.save(expense);
-        metricsService.incrementExpenseCreationCounter();  // Увеличиваем кастомную метрику
-        return savedExpense;
+        return expenseRepository.save(expense);
+    }
+
+    @GetMapping
+    public List<Expense> getAllExpenses() {
+        return expenseRepository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Expense getExpenseById(@PathVariable Long id) {
+        return expenseRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expense not found"));
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteExpense(@PathVariable Long id) {
+        if (expenseRepository.existsById(id)) {
+            expenseRepository.deleteById(id);
+        } else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Expense not found");
+        }
+    }
+
+    @PutMapping("/{id}")
+    public Expense updateExpense(@PathVariable Long id, @RequestBody Expense updatedExpense) {
+        return expenseRepository.findById(id)
+                .map(expense -> {
+                    expense.setName(updatedExpense.getName());
+                    expense.setAmount(updatedExpense.getAmount());
+                    return expenseRepository.save(expense);
+                }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Expense not found"));
     }
 }
-
